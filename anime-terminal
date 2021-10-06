@@ -17,9 +17,10 @@ help_text () {
 		printf "%s\n" "$line"
 	done <<-EOF
 	USAGE: $prog <query>
-	 -h	 show this help text
-	 -d	 download episode
-	 -H	 continue where you left off
+	 -h 		show this help text
+	 -d <query> 	download episode/s
+	 -H 		select unfinished anime & continue where you left off 
+	 -H <query> 	continue where you left off
 	EOF
 }
 
