@@ -39,11 +39,12 @@ for arch based distros:
 ```
 sudo pacman -Sy --needed ffmpeg
 ```
-  
+
 for debian based distros:
 
 ```
 sudo apt-get install ffmpeg
+```
 
 ### install optional dependency to clone the script
 for arch based distros:
