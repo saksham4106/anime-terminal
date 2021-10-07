@@ -2,11 +2,6 @@
 
 A cli to browse, watch and download anime.
 
-The script is working now but it takes long time (takes about 5-15 seconds) to load the video player (to get the playable video link).
-This is just a temporary solution. The load time and the player will be fixed soon (celluloid isn't working, i just use mpv).
-
-<!-- ## ⚠️Error! gogoanime has added [blob urls](https://stackoverflow.com/questions/30864573/what-is-a-blob-url-and-why-it-is-used#30881444) in the video so that watching or downloading videos from cli is really hard. I'll try to fix if it's possible else I will create a script for another website.
- -->
 Watch your favorite anime from linux terminal. You don't need a browser to watch anime now.
 
 This tool scrapes the site [gogoanime](https://gogoanime.vc).
@@ -17,7 +12,7 @@ This tool scrapes the site [gogoanime](https://gogoanime.vc).
 * curl
 * sed
 * celluloid
-* youtube-dl (not required to watch/only required if you need to download the anime)
+* ffmpeg (not required to watch/only required if you need to download the anime)
   
 ## Optional Dependency
 * git (to clone the script to your machine)
@@ -38,18 +33,17 @@ sudo apt-get install curl grep sed celluloid
 ```
 
 
-### Install youtube-dl (only to download the anime)
+### Install ffmpeg (only to download the anime)
 for arch based distros:
 
 ```
-sudo pacman -Sy --needed python python-pip && sudo pip install youtube-dl
+sudo pacman -Sy --needed ffmpeg
 ```
   
 for debian based distros:
 
 ```
-sudo apt-get install python python-pip && sudo pip install youtube-dl
-```
+sudo apt-get install ffmpeg
 
 ### install optional dependency to clone the script
 for arch based distros:
@@ -116,7 +110,7 @@ To download tokyo revengers: `./anime-terminal -d tokyo-revengers`
 
 To resume watching tokyo revengers: `./anime-terminal -H tokyo-revengers`
 
-### If you have moved the script to /usr/local/bin/, just use `anime-terminal tokyo-revengers`
+#### If you have moved the script to /usr/local/bin/, just use `anime-terminal tokyo-revengers`
 
 ### Multiple episodes can be viewed/downloaded by giving the episode range like:
 Choose episode [1-13]: `1 6`
