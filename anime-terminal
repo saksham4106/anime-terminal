@@ -1,5 +1,5 @@
 #!/bin/sh
-player_fn="mpv"
+player_fn="celluloid"
 
 prog="anime-terminal"
 logfile="${XDG_CACHE_HOME:-$HOME/.cache}/ani-hsts"
@@ -17,7 +17,7 @@ help_text () {
 		printf "%s\n" "$line"
 	done <<-EOF
 	USAGE: $prog <query>
-	 -h 		show this help text
+	 -h, --help	show this help text
 	 -d <query> 	download episode/s
 	 -H 		select unfinished anime & continue where you left off 
 	 -H <query> 	continue where you left off
@@ -168,7 +168,7 @@ open_episode () {
 	anime_id=$1
 	episode=$2
 
-	# Cool effect way of clearing screen
+	# Cool way of clearing screen
 	printf '\x1B[2J\x1B[1;1H'
 	if [ $episode -lt 1 ] || [ $episode -gt $last_ep_number ]; then
 		err "Episode out of range"
@@ -201,15 +201,15 @@ open_episode () {
 			s/^${selection_id}\t[0-9]+/${selection_id}\t$((episode+1))/
 		" "$logfile" > "${logfile}.new" && mv "${logfile}.new" "$logfile"
 
-		setsid -f $player_fn --http-header-fields="Referer: $embedded_video_url" "$video_url" >/dev/null 2>&1
+		setsid -f $player_fn --mpv-http-header-fields="Referer: $embedded_video_url" "$video_url" >/dev/null 2>&1
 	else
 		printf "Downloading episode $episode ...\n"
 		printf "%s\n" "$video_url"
 		# add 0 padding to the episode name
 		episode=$(printf "%03d" $episode)
 		{
-			curl -L -# -C - "$video_url" -G -e 'https://streamani.io/' \
-				-o "${anime_id}-${episode}.mp4" "$video_url" >/dev/null 2>&1 &&
+			ffmpeg -headers "Referer: $embedded_video_url" -i "$video_url" \
+				-c copy "${anime_id}-${episode}.mkv" >/dev/null 2>&1 &&
 				printf "${c_green}Downloaded episode: %s${c_reset}\n" "$episode" ||
 				printf "${c_red}Download failed episode: %s${c_reset}\n" "$episode"
 		}
@@ -242,9 +242,7 @@ while getopts 'hdH' OPT; do
 done
 shift $((OPTIND - 1))
 
-########
 # main #
-########
 
 case $scrape in
 	query)
