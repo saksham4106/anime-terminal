@@ -20,7 +20,7 @@ help_text () {
 	USAGE: $prog <query>
 	 -h		show this help text
 	 -d <query> 	download episode/s
-	 -H 		select unfinished anime & continue where you left off 
+	 -H 		select unfinished anime & continue where you left off
 	 -H <query> 	continue where you left off
 	EOF
 }
@@ -65,7 +65,7 @@ get_embedded_video_link() {
 	anime_id=$1
 	ep_no=$2
 
-	curl -s "curl -s "$base_url/$anime_id-episode-$ep_no" |
+	curl -s "$base_url/$anime_id-episode-$ep_no" |
 	sed -n -E '
 		/^[[:space:]]*<a href="#" rel="100"/{
 		s/.*data-video="([^"]*)".*/https:\1/p
