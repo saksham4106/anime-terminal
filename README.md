@@ -4,7 +4,7 @@ A cli to browse, watch and download anime.
 
 Watch your favorite anime from linux terminal. You don't need a browser to watch anime now.
 
-This tool scrapes the site [gogoanime](https://gogoanime.vc).
+This tool scrapes the site [gogoanime](https://gogoanime.cm).
 
 ## Dependencies
 
