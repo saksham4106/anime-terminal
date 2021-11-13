@@ -12,7 +12,6 @@ This tool scrapes the site [gogoanime](https://gogoanime.cm).
 * curl
 * sed
 * celluloid
-* ffmpeg (not required to watch/only required if you need to download the anime)
   
 ## Optional Dependency
 * git (to clone the script to your machine)
@@ -32,21 +31,7 @@ for debian based distros:
 sudo apt-get install curl grep sed celluloid
 ```
 
-
-### Install ffmpeg (only to download the anime)
-for arch based distros:
-
-```
-sudo pacman -Sy --needed ffmpeg
-```
-
-for debian based distros:
-
-```
-sudo apt-get install ffmpeg
-```
-
-### install optional dependency to clone the script
+### install optional dependency (git) to clone the script
 for arch based distros:
 
 ```
@@ -59,12 +44,12 @@ for debian based distros:
 sudo apt-get install git
 ```
 
-# Usage
+## Install the tool/script
 
 get the script in your machine:
 
 ```
-git clone https://github.com/YogeshLamichhane/anime-terminal/
+git clone https://github.com/whoisYoges/anime-terminal/
 ```
 
 change directory to the directory having anime script:
@@ -79,39 +64,39 @@ make the script executable:
 chmod +x anime-terminal
 ```
 
+make the script universal available
+```
+sudo mv anime-terminal /usr/local/bin/
+```
+
+# Usage
+### Execute any of the commands below in your terminal emulator.
 watch anime:
 
 ```
-./anime-terminal <your_query>
+anime-terminal <your_query>
 ```
 
 download anime: (anime will be downloaded in your current/active directory)
 
 ```
-./anime-terminal -d <your_query>
+anime-terminal -d <your_query>
 ```
 
 resume watching anime:
 
 ```
-./anime-terminal -H
-```
-
-### If you don't want to change directory and use ./ to execute the script every time, you can move the script to *bin* directory and execute the script from anywhere in the terminal using command `anime-terminal`.
-```
-sudo mv anime-terminal /usr/local/bin/
+anime-terminal -H
 ```
 
 ### Example:
 #### Lets take an example of anime called tokyo revengers.
 
-To watch tokyo revengers: `./anime-terminal tokyo-revengers`
+To watch tokyo revengers: `anime-terminal tokyo-revengers`
 
-To download tokyo revengers: `./anime-terminal -d tokyo-revengers`
+To download tokyo revengers: `anime-terminal -d tokyo-revengers`
 
-To resume watching tokyo revengers: `./anime-terminal -H tokyo-revengers`
-
-#### If you have moved the script to /usr/local/bin/, just use `anime-terminal tokyo-revengers`
+To resume watching tokyo revengers: `anime-terminal -H tokyo-revengers`
 
 ### Multiple episodes can be viewed/downloaded by giving the episode range like:
 Choose episode [1-13]: `1 6`
