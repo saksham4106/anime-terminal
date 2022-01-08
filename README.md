@@ -12,9 +12,7 @@ This tool scrapes the site [gogoanime](https://gogoanime.cm).
 - sed
 - mpv
 - ffmpeg
-#### Optional Dependencies
-- vlc - alternative video player
-- aria2 - For downloading (recommended)
+#### Optional: vlc
 
 # Installation
 ### Linux / Mac
