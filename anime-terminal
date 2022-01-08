@@ -25,9 +25,7 @@ help_text () {
 	done <<-EOF
   
 	Usage:
-	  $prog [-kv] [--dub] [-q <quality>] [-d | -p <download_dir>] [<query>]
-	  $prog [-kv] [--dub] [-q <quality>] -u | -n | -H
-	  $prog -h | -D
+	  $prog [option/s] [<query>]
 	Options:
 	 -u	 shows anime from history with unwatched episodes
 	 -n	 show recent anime
@@ -38,6 +36,7 @@ help_text () {
 	 -q	 set video quality (best/worst/360/480/720/..)
 	 -k	 on keypress navigation (previous/next/replay/quit episode)
 	 -v	 use VLC as the media player
+	 -p	 specify download directory (active/current directory by default)
 	 --dub	 play the dub version if present
 	Episode selection:
 	  Add 'h' on beginning for episodes like '6.5' -> 'h6'
@@ -99,6 +98,7 @@ get_dpage_link() {
 	anime_id=$1
 	ep_no=$2
 
+	# credits to fork: https://github.com/Dink4n/ani-cli for the fix
 	# dub prefix takes the value "-dub" when dub is needed else is empty
 	anime_page=$(curl -s "$base_url/$anime_id${dub_prefix}-$ep_no")
 
@@ -107,44 +107,22 @@ get_dpage_link() {
 	fi
 
 	printf '%s' "$anime_page" |
-	sed -n -E '
-		/^[[:space:]]*<li class="dowloads">/{
-		s/.*href="([^"]*)".*/\1/p
-		q
-		}'
+	    sed -n -E 's/.*rel="13" data-video="([^"]*)".*/\1/p' | cut -d/ -f5
 }
 
 get_video_quality() {
-	dpage_url=$1
-
-	video_links=$(curl -s "$dpage_url" | sed -n -E 's/.*href="([^"]*)" download>Download.*/\1/p' | sed 's/amp;//')
-	case $quality in
-		best)
-			video_link=$(printf '%s' "$video_links" | tail -n 1)
-			;;
-
-		worst)
-			video_link=$(printf '%s' "$video_links" | head -n 1)
-			;;
-
-		*)
-			video_link=$(printf '%s' "$video_links" | grep -i "${quality}p")
-			if [ -z "$video_link" ]; then
-				err "Current video quality is not available (defaulting to highest quality)"
-				quality=best
-				video_link=$(printf '%s' "$video_links" | tail -n 1)
-			fi
-			;;
-	esac
-
-	printf '%s' "$video_link"
-}
-
-get_links () {
 	dpage_url="$1"
-	video_url=$(get_video_quality "$dpage_url")
 
-	printf '%s' "$video_url"
+	video_links=$(curl -s "https://sbplay2.com/d/$dpage_url" | sed -n -E 's/.*a href="#" onclick="download_video([^"]*)".*/\1/p' | head -1)
+	
+	m=$(printf "$quality" | cut -c1)
+	h=$(printf "$video_links" | cut -d\' -f6)
+	video_link=$(curl -s "https://sbplay2.com/dl?op=download_orig&id=$dpage_url&mode=$m&hash=$h" | sed -n -E 's/<a href="([^"]*.mp4)".*/\1/p')
+	if [ -z "$video_link" ]; then 
+	    err "$quality quality doesn't exist, falling back to normal quality"
+	    video_link=$(curl -s "https://sbplay2.com/dl?op=download_orig&id=$dpage_url&mode=n&hash=$h" | sed -n -E 's/<a href="([^"]*.mp4)".*/\1/p')
+	fi
+	printf '%s' "$video_link"
 }
 
 dep_ch () {
@@ -168,7 +146,8 @@ get_search_query () {
 # create history file
 [ -f "$logfile" ] || : > "$logfile"
 
-## Anime selection
+
+# Anime selection
 anime_selection () {
 	search_results=$*
 	menu_format_string='[%d] %s\n'
@@ -302,7 +281,8 @@ open_episode () {
 	printf "Getting data for episode %s\n" "$episode"
 
 	dpage_link=$(get_dpage_link "$anime_id" "$episode")
-	video_url=$(get_links "$dpage_link")
+	video_url=$(get_video_quality "$dpage_link")
+	referer_link="https://sbplay2.com"
 
 	if [ "$half_ep" -eq 1 ]
 	then
@@ -315,18 +295,15 @@ open_episode () {
 		sed -E "
 			s/^${selection_id}\t[0-9]+/${selection_id}\t$((episode+1))/
 		" "$logfile" > "${logfile}.new"
+		printf "%s\n" "$video_url"
 
 		kill "$PID" >/dev/null 2>&1
 		case $player_fn in
 			"mpv")
-				nohup "$player_fn" --http-header-fields="Referer: $dpage_link" "$video_url" > /dev/null 2>&1 &
+				nohup "$player_fn" --http-header-fields="Referer:$referer_link" "$video_url" > /dev/null 2>&1 &
 				;;
 			"vlc")
-				if ! command -v "vlc" >/dev/null ; then
-					die "Program "vlc" not found. Please install it."
-				else
-					nohup "$player_fn" --http-referrer="$dpage_link" "$video_url" --http-user-agent="Mozilla/5.0" --adaptive-use-access > /dev/null 2>&1 &
-				fi
+				nohup "$player_fn" --http-referrer="$referer_link" "$video_url" > /dev/null 2>&1 &
 				;;
 			*)
 				die "Unsupported player"
@@ -342,7 +319,7 @@ open_episode () {
 		# add 0 padding to the episode name
 		episode=$(printf "%03d" "$episode")
 		{
-			aria2c -x 16 -s 16 --referer "$dpage_link" "$video_url" --dir="$download_dir" -o "${anime_id}-${episode}.mp4" --download-result=hide &&
+			aria2c -x 16 -s 16 --referer="$referer_link" "$video_url" --dir="$download_dir" -o "${anime_id}-${episode}.mp4" --download-result=hide &&
 				printf "${c_green}Downloaded episode: %s${c_reset}\n" "$episode" ||
 				printf "${c_red}Download failed episode: %s , please retry or check your internet connection${c_reset}\n" "$episode"
 		}
@@ -356,7 +333,7 @@ trap 'printf "$c_reset"; exit 1' INT HUP
 # option parsing
 is_download=0
 half_ep=0
-quality=best
+quality=normal
 scrape=query
 download_dir="."
 navigation_type=0
@@ -422,6 +399,17 @@ done
 
 # check for main dependencies
 dep_ch "curl" "sed" "grep"
+
+# check for optional dependencies
+if [ "$is_download" -eq 0 ]; then
+	dep_ch "$player_fn"
+else
+    if ! command -v aria2c > /dev/null ; then
+	echo "command aria2c not found. Please install it"
+	echo "To install aria2c, Type <your_package_manager> aria2"
+	exit 1
+    fi
+fi
 
 shift $((OPTIND - 1))
 
