@@ -11,8 +11,10 @@ This tool scrapes the site [gogoanime](https://gogoanime.cm).
 - curl
 - sed
 - mpv
-- ffmpeg
-#### Optional: vlc
+
+#### Optional Dependencies
+- vlc - alternative video player
+- aria2 - For downloading (recommended)
 
 # Installation
 ### Linux / Mac
@@ -40,6 +42,7 @@ Options:
  -q	 set video quality (best/worst/360/480/720/..)
  -k	 on keypress navigation (previous/next/replay/quit episode)
  -v	 use VLC as the media player
+ -p	 specify download directory (active/current directory by default)
  --dub	 play the dub version if present
 
 Episode selection:
