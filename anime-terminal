@@ -26,6 +26,7 @@ help_text () {
   
 	Usage:
 	  $prog [option/s] [<query>]
+    $prog [option/s] [<query>] --dub
 	Options:
 	 -u	 shows anime from history with unwatched episodes
 	 -n	 show recent anime
@@ -37,7 +38,10 @@ help_text () {
 	 -k	 on keypress navigation (previous/next/replay/quit episode)
 	 -v	 use VLC as the media player
 	 -p	 specify download directory (active/current directory by default)
-	 --dub	 play the dub version if present
+Dub Selection:
+  --dub	 play the dub version if present
+  anime-terminal [<options>] [<query>] --dub
+
 	Episode selection:
 	  Add 'h' on beginning for episodes like '6.5' -> 'h6'
 	Multiple episodes can be chosen given a range
