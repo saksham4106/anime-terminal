@@ -5,16 +5,13 @@ A cli to browse, watch and download anime.
 Watch your favorite anime from *nix terminal. You don't need a browser to watch anime now.
 
 This tool scrapes the site [gogoanime](https://gogoanime.cm).
-
 ### Dependencies
 - grep
 - curl
 - sed
 - mpv
-
-#### Optional Dependencies
-- vlc - alternative video player
-- aria2 - For downloading (recommended)
+- openssl
+- aria2 (only for downloading)
 
 # Installation
 Make sure you've installed all the dependencies on your system.
@@ -23,6 +20,8 @@ git clone https://github.com/whoisYoges/anime-terminal
 cd anime-terminal
 chmod +x anime-terminal
 sudo cp anime-terminal /usr/local/bin/
+cd ..
+rm -r anime-terminal
 ```
 ### Uninstallation
 ```
@@ -30,29 +29,26 @@ sudo rm /usr/local/bin/anime-terminal
 ```
 ### Usage
 ```
-anime-terminal [-kv] [-q <quality>] [-d | -p <download_dir>] [<query>]
-anime-terminal [<query>] --dub
+Usage:
+anime-terminal [-q <quality>] [-a <episode>] [-d | -p <download_dir>] [<query>]
+anime-terminal [-q <quality>] -c
 anime-terminal -h | -D
 
 Options:
- -u	 shows anime from history with unwatched episodes
- -n	 show recent anime
- -h	 show this help text
- -d	 download episode
- -H	 watch from history; continue from where you left off
- -D	 delete history
- -q	 set video quality (best/worst/360/480/720/..)
- -k	 on keypress navigation (previous/next/replay/quit episode)
- -v	 use VLC as the media player
- -p	 specify download directory (active/current directory by default)
-Dub Selection:
- --dub	 play the dub version if present
-  anime-terminal [<options>] [<query>] --dub
+-c continue watching anime from history
+-e pass arguments to the player/downloader
+-a specify episode to watch
+-h show helptext
+-d download episode
+-p download episode to specified directory
+-q set video quality (best|worst|360|480|720|1080)
+-D delete history
 
 Episode selection:
- Add 'h' on beginning for episodes like '6.5' -> 'h6'
- 
+Add 'h' on beginning for episodes like '6.5' -> 'h6'
 Multiple episodes can be chosen given a range
- Choose episode [1-13]: 1 6
- This would choose episodes 1 2 3 4 5 6
+    Choose episode [1-13]: 1 6
+    This would choose episodes 1 2 3 4 5 6
+When selecting non-interactively, the first result will be
+selected, if anime is passed
 ```
