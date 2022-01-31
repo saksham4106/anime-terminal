@@ -1,6 +1,5 @@
 #!/bin/sh
 
-
 # history file path
 logpath="${XDG_CACHE_HOME:-$HOME/.cache}/anime-terminal/"
 logfile=""$logpath"/anime-terminal.log"
@@ -47,22 +46,6 @@ die () {
 	err "$*"
 	exit 1
 }
-
-
-dep_ch () {
-	# checks if programs are present
-	for dep; do
-		if ! command -v "$dep" >/dev/null ; then
-			err "Program \"$dep\" not found. Please install it."
-			#aria2c is in the package aria2
-			if [ "$dep" = "aria2c" ]; then
-				err "To install aria2c, Type <your_package_manager> aria2"
-			fi
-			die
-		fi
-	done
-}
-
 
 search_anime () {
 	# get anime name along with its id for search term
@@ -367,35 +350,21 @@ open_episode () {
 		if [ -z "$video_url" ]; then
 			die "Video URL not found"
 		fi
+        
+        if [ "$auto_play" -eq 0 ]; then
+            echo "$player_arguments" | xargs nohup "$player_fn" --referrer="$dpage_link" "$video_url" --title="ani-cli: $anime_id ep $episode" > /dev/null 2>&1 &
+        else
+            inf "Currently playing $selection_id episode" "$episode/$last_ep_number"
+            echo "$player_arguments" | xargs "$player_fn" --referrer="$dpage_link" "$video_url" --title="ani-cli: $anime_id ep $episode" > /dev/null 2>&1
+            sleep 2
+        fi
 
-		
-
-		case $player_fn in
-			vlc)
-				if [ "$auto_play" -eq 0 ]; then
-					nohup "$player_fn" "$player_arguments" --http-referrer="$dpage_link" "$video_url" > /dev/null 2>&1 &
-				else
-					inf "Currently playing $selection_id episode" "$episode/$last_ep_number"
-					"$player_fn" "$player_arguments" --play-and-exit --http-referrer="$dpage_link" "$video_url" > /dev/null 2>&1
-					sleep 2
-				fi
-				;;
-			*)
-				if [ "$auto_play" -eq 0 ]; then
-					echo "$player_arguments" | xargs nohup "$player_fn" --referrer="$dpage_link" "$video_url" --title="ani-cli: $anime_id ep $episode" > /dev/null 2>&1 &
-				else
-					inf "Currently playing $selection_id episode" "$episode/$last_ep_number"
-					echo "$player_arguments" | xargs "$player_fn" --referrer="$dpage_link" "$video_url" --title="ani-cli: $anime_id ep $episode" > /dev/null 2>&1
-					sleep 2
-				fi
-				;;
-		esac
 		PID=$!
 
 		mv "${logfile}.new" "$logfile"
 	else
 		mkdir -p "$download_dir"
-		inf "Downloading episode $episode ...\n"
+		inf "Downloading episode $episode ..."
 		# add 0 padding to the episode name
 		episode=$(printf "%03d" "$episode")
 		{

@@ -36,7 +36,6 @@ anime-terminal -h | -D
 
 Options:
 -c continue watching anime from history
--e pass arguments to the player/downloader
 -a specify episode to watch
 -h show helptext
 -d download episode
@@ -52,3 +51,4 @@ Multiple episodes can be chosen given a range
 When selecting non-interactively, the first result will be
 selected, if anime is passed
 ```
+
