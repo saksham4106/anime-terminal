@@ -8,10 +8,12 @@ help_text () {
 	while IFS= read -r line; do
 		printf "%s\n" "$line"
 	done <<-EOF
+
 	Usage:
-	  anime-terminal [-q <quality>] [-a <episode>] [-d | -p <download_dir>] [<query>]
-	  anime-terminal [-q <quality>] -c
-	  anime-terminal -h | -D 
+	  ${0##*/} [-q <quality>] [-a <episode>] [-d | -p <download_dir>] [<query>]
+	  ${0##*/} [-q <quality>] -c
+	  ${0##*/} -h | -D
+
 	Options:
 	  -c continue watching anime from history
 	  -a specify episode to watch
@@ -20,27 +22,22 @@ help_text () {
 	  -p download episode to specified directory
 	  -q set video quality (best|worst|360|480|720|1080)
 	  -D delete history
+
 	Episode selection:
 	  Add 'h' on beginning for episodes like '6.5' -> 'h6'
 	  Multiple episodes can be chosen given a range
 	    Choose episode [1-13]: 1 6
 	    This would choose episodes 1 2 3 4 5 6
 		To select the last episode use -1
+
+	  When selecting non-interactively, the first result will be
+	  selected, if anime is passed
 	EOF
 }
 
 die () {
 	err "$*"
 	exit 1
-}
-
-check_logpath_and_logfile(){
-	if [ ! -d "$logpath" ]; then
-		mkdir -p "$logpath"
-	fi
-	cd "$logpath"
-	# create history file if none found
-	[ -f "$logfile" ] || : > "$logfile"
 }
 
 #############
@@ -103,28 +100,29 @@ get_dpage_link() {
 	# get the download page url
 	anime_id="$1"
 	ep_no="$2"
-	# credits to fork: https://github.com/Dink4n/ani-cli for the fix
-	anime_page=$(curl -s "$base_url/$anime_id-$ep_no")
-	printf '%s' "$anime_page" | grep -q '404' && anime_page=$(curl -s "$base_url/$anime_id-episode-$ep_no")
+	for params in "-episode-$ep_no" "-$ep_no" "-episode-$ep_no-1" "-camrip-episode-$ep_no"; do
+		anime_page=$(curl -s "$base_url/$anime_id$params")
+		printf '%s' "$anime_page" | grep -q '<h1 class="entry-title">404</h1>' || break
+	done
 	printf '%s' "$anime_page" |
-		sed -n -E 's/^[[:space:]]*<a href="#" rel="100" data-video="([^"]*)".*/\1/p' |
-		sed 's/^/https:/g'
+		sed -n -E 's/.*class="active" rel="1" data-video="([^"]*)".*/\1/p' | sed 's/^/https:/g'
 }
 
 decrypt_link() {
-	ajax_url='https://gogoplay.io/encrypt-ajax.php'
-	secret_key='3235373436353338353932393338333936373634363632383739383333323838'
-	iv='34323036393133333738303038313335'
+	secret_key='3235373136353338353232393338333936313634363632323738383333323838'
+	iv='31323835363732393835323338333933'
+	ajax_url="https://gogoplay4.com/encrypt-ajax.php"
+	crypto_data=$(curl -s "$1" | sed -nE 's/.*data-value="([^"]*)".*/\1/p')
+	id=$(printf '%s' "$crypto_data" | base64 -d | openssl enc -d -aes256 -K "$secret_key" -iv "$iv" | cut -d '&' -f1)
 
-	#get the id from the url
-	video_id=$(printf '%s' "$1" | cut -d\? -f2 | cut -d\& -f1 | sed 's/id=//g')
+	#encrypt and create the final ajax
+	ajax=$(printf "%s\010\016\003\010\t\003\004\t" "$id" | openssl enc -aes256 -K "$secret_key" -iv "$iv" -a)
 
-	#construct ajax parameters
-	ajax=$(printf '%s' "$video_id" | openssl enc -aes256 -K "$secret_key" -iv "$iv" -a)
-
-	#send the request to the ajax url
-	curl -s -H 'x-requested-with:XMLHttpRequest' "$ajax_url" -d "id=$ajax" -d "time=69420691337800813569" |
-		sed -e 's/\].*/\]/' -e 's/\\//g' |
+	#send request and get the data(most lamest way)
+	data=$(curl -s -H "X-Requested-With:XMLHttpRequest" "$ajax_url" -d "id=$ajax" | sed -e 's/{"data":"//' -e 's/"}/\n/' -e 's/\\//g')
+	
+	#decrypt the data to get final links
+	printf '%s' "$data" | base64 -d | openssl enc -d -aes256 -K "$secret_key" -iv "$iv" | sed -e 's/\].*/\]/' -e 's/\\//g' |
 		grep -Eo 'https:\/\/[-a-zA-Z0-9@:%._\+~#=][a-zA-Z0-9][-a-zA-Z0-9@:%_\+.~#?&\/\/=]*'
 }
 
@@ -233,12 +231,12 @@ anime_selection () {
 	elif [ -z "$ep_choice_to_start" ] || { [ -n "$ep_choice_to_start" ] && [ -z "$select_first" ]; }; then
 		menu_line_strong "exit" "q"
 		prompt "Enter choice"
-		choice="$REPLY $REPLY2"
+		choice="$REPLY"
 		while ! [ "$choice" -eq "$choice" ] 2>/dev/null || [ "$choice" -lt 1 ] || [ "$choice" -ge "$count" ] || [ "$choice" = " " ]; do
-			[ "$choice" = "q " ] && exit 0
+			[ "$choice" = "q" ] && exit 0
 			err "Invalid choice entered"
 			prompt "Enter choice"
-			choice="$REPLY $REPLY2"
+			choice="$REPLY"
 		done
 	fi
 	# Select respective anime_id
@@ -360,15 +358,15 @@ open_episode () {
 		sed -E "
 			s/^${selection_id}\t[0-9]+/${selection_id}\t$((episode+1))/
 		" "$logfile" > "${logfile}.new"
-		kill "$PID" >/dev/null 2>&1
+		[ "$PID" -ne 0 ] && kill "$PID" >/dev/null 2>&1
 		[ -z "$video_url" ] && die "Video URL not found"
-		if [ "$auto_play" -eq 0 ]; then
-			nohup "$player_fn" --referrer="$dpage_link" "$video_url" --force-media-title="ani-cli: $anime_id ep $episode" > /dev/null 2>&1 &
-		else
-			inf "Currently playing $selection_id episode" "$episode/$last_ep_number, Range: $ep_choice_start-$ep_choice_end"
-			"$player_fn" --referrer="$dpage_link" "$video_url" --force-media-title="ani-cli: $anime_id ep $episode" > /dev/null 2>&1
-			sleep 2
-		fi
+			if [ "$auto_play" -eq 0 ]; then
+				nohup "$player_fn" --referrer="$dpage_link" "$video_url" --force-media-title="ani-cli: $anime_id ep $episode" > /dev/null 2>&1 &
+			else
+				inf "Currently playing $selection_id episode" "$episode/$last_ep_number, Range: $ep_choice_start-$ep_choice_end"
+				"$player_fn" --referrer="$dpage_link" "$video_url" --force-media-title="ani-cli: $anime_id ep $episode" > /dev/null 2>&1
+				sleep 2
+			fi
 		PID=$!
 		mv "${logfile}.new" "$logfile"
 	else
@@ -377,9 +375,7 @@ open_episode () {
 		# add 0 padding to the episode name
 		episode=$(printf "%03d" "$episode")
 		{
-			#uncomment this below line if you are getting low download speeds, and comment next one after below line
-			#aria2c -x 16 -s 16 --referer="$dpage_link" "$video_url" --dir="$download_dir" -o "${anime_id}-${episode}.mp4" --download-result=hide &&
-			if aria2c --referer="$dpage_link" "$video_url" --dir="$download_dir" -o "${anime_id}-${episode}.mp4" --download-result=hide ; then
+			if aria2c -x 16 -s 16 --referer="$dpage_link" "$video_url" --dir="$download_dir" -o "${anime_id}-${episode}.mp4" --download-result=hide ; then
 				inf "Downloaded episode: $episode"
 			else
 				err "Download failed episode: $episode , please retry or check your internet connection"
@@ -399,16 +395,21 @@ trap 'printf "\033[0m";[ -f "$logfile".new ] && rm "$logfile".new;exit 1' INT HU
 player_fn="mpv" #video player needs to be able to play urls
 is_download=0
 half_ep=0
+PID=0
 quality=best
 scrape=query
 download_dir="."
 choice=
 auto_play=0
-#history file and file path
-logpath="${XDG_CACHE_HOME:-$HOME/.cache}/anime-terminal/"
-logfile=""$logpath"/anime-terminal.log"
+# history file path
+logfile="${XDG_CACHE_HOME:-$HOME/.cache/anime-terminal/}anime-terminal.log"
+logdir="${XDG_CACHE_HOME:-$HOME/.cache/anime-terminal/}"
 
-while getopts 'vq:dp:chDUVa:' OPT; do
+# create history file and history dir if none found
+[ -d "$logdir" ] || mkdir -p "$logdir"
+[ -f "$logfile" ] || : > "$logfile"
+
+while getopts 'q:dp:chDa:' OPT; do
 	case $OPT in
 		h)
 			help_text
@@ -470,7 +471,7 @@ case $scrape in
 	*)
 		die "Unexpected scrape type"
 esac
-check_logpath_and_logfile
+
 check_input
 append_history
 open_selection
@@ -503,7 +504,7 @@ if [ -z "$select_first" ]; then
 			ep_choice_end=
 			;;
 		b)
-			prompt "Select quality"
+			prompt "Select quality. Options (best|worst|360|480|720|1080)"
 			quality="$REPLY"
 			;;
 		p)
@@ -523,18 +524,15 @@ if [ -z "$select_first" ]; then
 		h)
 			search_history
 			;;
-		N)
-			ep_choice_start=$((episode + 1))
-			;;
 		q)
-			break;;
+			break
+			;;
 		*)
 			tput clear
 			err "Invalid choice"
 			continue
 			;;
 	esac
-	check_logpath_and_logfile
 	check_input
 	append_history
 	open_selection
