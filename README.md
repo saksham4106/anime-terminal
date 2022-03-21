@@ -22,13 +22,15 @@ This tool scrapes the site [gogoanime](https://gogoanime.cm).
 git clone https://github.com/whoisYoges/anime-terminal
 cd anime-terminal
 chmod +x anime-terminal
-sudo cp anime-terminal /usr/local/bin/
+sudo cp anime-terminal /usr/bin/
+sudo cp anime-terminal.1 /usr/share/man/man1/
 cd ..
 rm -r anime-terminal
 ```
 ### Uninstallation
 ```
-sudo rm /usr/local/bin/anime-terminal
+sudo rm /usr/bin/anime-terminal
+sudo rm /usr/share/man/man1/anime-terminal.1
 ```
 ### Usage
 ```
@@ -39,7 +41,7 @@ Usage:
 Options:
     -c continue watching anime from history
     -a specify episode to watch
-    -h show helptext
+    -h show help text
     -d download episode
     -p download episode to specified directory
     -q set video quality (best|worst|360|480|720|1080)

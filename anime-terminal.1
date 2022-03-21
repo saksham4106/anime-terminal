@@ -1,0 +1,47 @@
+.TH anime-terminal
+.SH NAME
+.B anime\-terminal \- a cli to browse stream and download anime
+.SH DESCRIPTION
+anime\-terminal (https://www.github.com/whoisYoges/anime-terminal/) is a fork of ani-cli (https://www.github.com/pystardust/ani-cli/) removing vlc and other updating stuff which are unnecessary for me.
+.P
+It is a command line tool (bash script) to browse watch/stream and download anime from terminal. You can stream/download episodes in bulk giving a range of episodes.
+.SH DEPENDENCIES
+.B \- grep, curl, sed, mpv, openssl
+.P
+.B \- aria2, ffmpeg (only for downloading)
+.SH USAGE
+anime\-terminal [\-q <quality>] [\-a <episode>] [\-d | \-p <download_dir>] [<query>]
+.P
+anime\-terminal [\-q <quality>] \-c
+.P
+anime\-terminal \-h | \-D
+
+.SH OPTIONS
+\-c continue watching anime from history
+.P
+\-a specify episode to watch
+.P
+\-h show help text
+.P
+\-d download episode
+.P
+\-p download episode to specified directory
+.P
+\-q set video quality (best|worst|360|480|720|1080)
+.P
+\-D delete history
+.SH Episode selection:
+.TP
+Add 'h' on beginning for episodes like '6.5' -> 'h6'
+.SH Multiple episodes can be chosen given a range
+.TP
+Choose episode [1-13]: 1 6
+.TP
+	This would choose episodes 1 2 3 4 5 6
+.TP
+To select the last episode use \-1
+.TP
+When selecting non-interactively, the first result will be selected, if anime is passed
+
+.SH ISSUE AND BUGS
+Report all the issues, bugs, feature requests and bugfixings to https://www.github.com/whoisYoges/anime-terminal/issues/. 
