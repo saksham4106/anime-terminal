@@ -8,7 +8,7 @@ help_text () {
 	while IFS= read -r line; do
 		printf "%s\n" "$line"
 	done <<-EOF
-
+	
 	Usage:
 	  ${0##*/} [-q <quality>] [-a <episode>] [-d | -p <download_dir>] [<query>]
 	  ${0##*/} [-q <quality>] -c
@@ -38,6 +38,15 @@ help_text () {
 die () {
 	err "$*"
 	exit 1
+}
+
+download () {
+case $2 in
+	*mp4*)
+		aria2c --summary-interval=0 -x 16 -s 16 --referer="$1" "$2" --dir="$download_dir" -o "${3}-${4}.mp4" --download-result=hide;;
+	*)
+		ffmpeg -loglevel error -stats -referer "$1" -i "$2" -c copy "$download_dir/${3}-${4}.mp4";;
+esac
 }
 
 #############
@@ -88,6 +97,8 @@ search_history () {
 	[ -z "$search_results" ] && die "History is empty"
 	search_results=$(search_for_unwatched "$search_results")
 	[ -z "$search_results" ] && die "No unwatched episodes"
+  one_hist=$(printf '%s\n' "$search_results" | grep -e "$" -c)
+  [ "$one_hist" = 1 ] && select_first=1
 	anime_selection "$search_results"
 	ep_choice_start=$(sed -n -E "s/${selection_id}\t//p" "$logfile")
 }
@@ -112,11 +123,23 @@ decrypt_link() {
 	secret_key='3235373136353338353232393338333936313634363632323738383333323838'
 	iv='31323835363732393835323338333933'
 	ajax_url="https://gogoplay4.com/encrypt-ajax.php"
-	crypto_data=$(curl -s "$1" | sed -nE 's/.*data-value="([^"]*)".*/\1/p')
-	id=$(printf '%s' "$crypto_data" | base64 -d | openssl enc -d -aes256 -K "$secret_key" -iv "$iv" | cut -d '&' -f1)
+	id=$(printf "%s" "$1" | sed -nE 's/.*id=(.*)&title.*/\1/p')
+
+	if [ "${#id}" -lt "8" ]; then
+		#pad the id with character until it length(id) reaches to 8, no xor needed to be done on it
+		pad=$(printf "\010\016\003\010\t\003\004\t" | cut -c"$((8-(${#id} % 16)))"-)
+		new_id=$(printf "%s$pad" "$id")
+	else
+		# xor the last character of id with 0xA if length(id) is 8, make it the new last character
+		lastchar=$(printf %s "$id" | tail -c 1)
+		lastcharval=$(printf %d "'$lastchar")
+		xor=$((lastcharval ^ 10 ))
+		octalval=$(printf "\\$(printf %o "$xor")")
+		new_id=$(printf "%s" "$id" | sed "s/.$/$octalval/")
+	fi
 
 	#encrypt and create the final ajax
-	ajax=$(printf "%s\010\016\003\010\t\003\004\t" "$id" | openssl enc -aes256 -K "$secret_key" -iv "$iv" -a)
+	ajax=$(printf "%s\010\016\003\010\t\003\004\t" "$new_id" | openssl enc -aes256 -K "$secret_key" -iv "$iv" -a)
 
 	#send request and get the data(most lamest way)
 	data=$(curl -s -H "X-Requested-With:XMLHttpRequest" "$ajax_url" -d "id=$ajax" | sed -e 's/{"data":"//' -e 's/"}/\n/' -e 's/\\//g')
@@ -148,7 +171,6 @@ get_video_quality() {
 	esac
 	printf '%s' "$video_link"
 }
-
 
 ###############
 # TEXT OUTPUT #
@@ -196,7 +218,6 @@ menu_line_strong() {
 	printf "\033[1;34m[\033[1;31m%s\033[1;34m] \033[1;31m%s\033[0m\n" "$2" "$1"
 }
 
-
 #################
 # INPUT PARSING #
 #################
@@ -225,7 +246,7 @@ anime_selection () {
 	done <<-EOF
 	$search_results
 	EOF
-	if [ -n "$ep_choice_to_start" ] && [ -n "$select_first" ]; then
+	if [ -n "$select_first" ]; then
 		tput clear
 		choice=1
 	elif [ -z "$ep_choice_to_start" ] || { [ -n "$ep_choice_to_start" ] && [ -z "$select_first" ]; }; then
@@ -306,7 +327,6 @@ check_input() {
 	fi
 }
 
-
 ##################
 # VIDEO PLAYBACK #
 ##################
@@ -347,7 +367,11 @@ open_episode () {
 	inf "Getting data for episode $episode"
 	# decrypting url
 	dpage_link=$(get_dpage_link "$anime_id" "$episode")
-	video_url=$(get_video_quality "$dpage_link")
+	if [ -z "$dpage_link" ];then 
+	    err "Episode doesn't exist!!"
+	else
+	    video_url=$(get_video_quality "$dpage_link")
+	fi
 	if [ "$half_ep" -eq 1 ]; then
 		episode="$temp_ep"
 		half_ep=0
@@ -360,13 +384,14 @@ open_episode () {
 		" "$logfile" > "${logfile}.new"
 		[ "$PID" -ne 0 ] && kill "$PID" >/dev/null 2>&1
 		[ -z "$video_url" ] && die "Video URL not found"
-			if [ "$auto_play" -eq 0 ]; then
-				nohup "$player_fn" --referrer="$dpage_link" "$video_url" --force-media-title="ani-cli: $anime_id ep $episode" > /dev/null 2>&1 &
-			else
-				inf "Currently playing $selection_id episode" "$episode/$last_ep_number, Range: $ep_choice_start-$ep_choice_end"
-				"$player_fn" --referrer="$dpage_link" "$video_url" --force-media-title="ani-cli: $anime_id ep $episode" > /dev/null 2>&1
-				sleep 2
-			fi
+			trackma_title=$(printf '%s' "$anime_id" | tr '-' ' ' )
+				if [ "$auto_play" -eq 0 ]; then
+					nohup "$player_fn" --referrer="$dpage_link" "$video_url" --force-media-title="$trackma_title $episode" > /dev/null 2>&1 &
+				else
+					inf "Currently playing $selection_id episode" "$episode/$last_ep_number, Range: $ep_choice_start-$ep_choice_end"
+					"$player_fn" --referrer="$dpage_link" "$video_url" --force-media-title="$trackma_title $episode" > /dev/null 2>&1
+					sleep 2
+				fi
 		PID=$!
 		mv "${logfile}.new" "$logfile"
 	else
@@ -375,7 +400,7 @@ open_episode () {
 		# add 0 padding to the episode name
 		episode=$(printf "%03d" "$episode")
 		{
-			if aria2c -x 16 -s 16 --referer="$dpage_link" "$video_url" --dir="$download_dir" -o "${anime_id}-${episode}.mp4" --download-result=hide ; then
+			if download "$dpage_link" "$video_url" "$anime_id" "$episode" ; then
 				inf "Downloaded episode: $episode"
 			else
 				err "Download failed episode: $episode , please retry or check your internet connection"
@@ -402,7 +427,7 @@ download_dir="."
 choice=
 auto_play=0
 # history file path
-logfile="${XDG_CACHE_HOME:-$HOME/.cache/anime-terminal/}anime-terminal.log"
+logfile="${XDG_CACHE_HOME:-$HOME/.cache/anime-terminal}/anime-terminal.log"
 logdir="${XDG_CACHE_HOME:-$HOME/.cache/anime-terminal/}"
 
 # create history file and history dir if none found
@@ -417,7 +442,6 @@ while getopts 'q:dp:chDa:' OPT; do
 			;;
 		d)
 			is_download=1
-			select_first=1
 			;;
 		a)
 			ep_choice_to_start=$OPTARG
@@ -429,7 +453,6 @@ while getopts 'q:dp:chDa:' OPT; do
 		p)
 			is_download=1
 			download_dir=$OPTARG
-			select_first=1
 			;;
 		q)
 			quality=$OPTARG

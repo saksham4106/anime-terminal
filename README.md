@@ -11,10 +11,13 @@ This tool scrapes the site [gogoanime](https://gogoanime.cm).
 - sed
 - mpv
 - openssl
-- aria2 (only for downloading)
+- aria2 (Only for downloading)
+- ffmpeg (Only for downloading)
+
+*Most of the latest anime episodes are available only in m3u8 format which cannot be downloaded by aria2, so using ffmpeg instead. It isn't required for streaming though!'*
 
 # Installation
-Make sure you've installed all the dependencies on your system.
+**Make sure you've installed all the dependencies on your system.**
 ```
 git clone https://github.com/whoisYoges/anime-terminal
 cd anime-terminal
@@ -51,4 +54,3 @@ Episode selection:
     When selecting non-interactively, the first result will be
     selected, if anime is passed
 ```
-
