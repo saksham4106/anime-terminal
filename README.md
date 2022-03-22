@@ -2,7 +2,7 @@
 
 A cli to browse, watch and download anime.
 
-Watch your favorite anime from *nix terminal. You don't need a browser to watch anime now.
+Watch your favorite anime from linux terminal. You don't need a browser to watch anime now.
 
 This tool scrapes the site [gogoanime](https://gogoanime.cm).
 ### Dependencies
@@ -22,14 +22,22 @@ This tool scrapes the site [gogoanime](https://gogoanime.cm).
 git clone https://github.com/whoisYoges/anime-terminal
 cd anime-terminal
 chmod +x anime-terminal
-sudo cp anime-terminal /usr/bin/
-sudo cp anime-terminal.1 /usr/share/man/man1/
+sudo cp anime-terminal /usr/local/bin/
 cd ..
-rm -r anime-terminal
+rm -rf anime-terminal/
 ```
-### Uninstallation
+### Documentation (Man Page)
+Install if you need documentation (man page) for anime-terminal.
 ```
-sudo rm /usr/bin/anime-terminal
+curl "https://raw.githubusercontent.com/whoisYoges/anime-terminal/master/anime-terminal.1" > anime-terminal.1
+sudo mv anime-terminal.1 /usr/share/man/man1/
+```
+# Uninstallation
+```
+sudo rm /usr/local/bin/anime-terminal
+```
+### Uninstall documentation (man page) if you've installed it.
+```
 sudo rm /usr/share/man/man1/anime-terminal.1
 ```
 ### Usage
