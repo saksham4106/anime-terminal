@@ -1,18 +1,20 @@
 .TH anime-terminal 1
 .SH NAME
-.B anime\-terminal \- a cli to browse stream and download anime
+.B anime\-terminal \- a cli to browse, stream and download anime
 .SH DESCRIPTION
-anime\-terminal is a fork of ani\-cli (https://www.github.com/pystardust/ani\-cli/) removing vlc and other updating stuff which are unnecessary for me.
+anime\-terminal is a fork of ani\-cli (https://www.github.com/pystardust/ani\-cli/) with certain changes made according to my taste.
 .P
 It is a command line tool (bash script) to browse watch/stream and download anime from terminal. You can stream/download episodes in bulk giving a range of episodes.
 .SH DEPENDENCIES
 .B \- grep, curl, sed, mpv, openssl
 .P
 .B \- aria2, ffmpeg (only for downloading)
+.SH OPTIONAL DEPENDENCIES
+.B \- vlc (only required with \-v option)
 .SH USAGE
-anime\-terminal [\-q <quality>] [\-a <episode>] [\-d | \-p <download_dir>] [<query>]
+anime\-terminal [\-v] [\-q <quality>] [\-a <episode>] [\-d | \-p <download_dir>] [<query>]
 .P
-anime\-terminal [\-q <quality>] \-c
+anime\-terminal [\-v] [\-q <quality>] \-c
 .P
 anime\-terminal \-h | \-D
 
@@ -28,6 +30,8 @@ anime\-terminal \-h | \-D
 \-p download episode to specified directory
 .P
 \-q set video quality (best|worst|360|480|720|1080)
+.P
+\-v use VLC as the media player
 .P
 \-D delete history
 .SH Episode selection:

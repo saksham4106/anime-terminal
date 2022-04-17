@@ -1,6 +1,6 @@
 # anime-terminal
 
-A cli to browse, watch and download anime.
+A cli to browse, stream/watch and download anime.
 
 Watch your favorite anime from linux terminal. You don't need a browser to watch anime now.
 
@@ -13,18 +13,17 @@ This tool scrapes the site [gogoanime](https://gogoanime.cm).
 - openssl
 - aria2 (Only for downloading)
 - ffmpeg (Only for downloading)
-
 *Most of the latest anime episodes are available only in m3u8 format which cannot be downloaded by aria2, so using ffmpeg instead. It isn't required for streaming though!'*
+
+### Optional Dependencies
+- vlc (only required when used with -v option)
 
 # Installation
 **Make sure you've installed all the dependencies on your system.**
 ```
-git clone https://github.com/whoisYoges/anime-terminal
-cd anime-terminal
+curl "https://raw.githubusercontent.com/whoisYoges/anime-terminal/master/anime-terminal" > anime-terminal
 chmod +x anime-terminal
-sudo cp anime-terminal /usr/local/bin/
-cd ..
-rm -rf anime-terminal/
+sudo mv anime-terminal /usr/local/bin/
 ```
 ### Documentation (Man Page)
 Install if you need documentation (man page) for anime-terminal.
@@ -43,8 +42,8 @@ sudo rm /usr/share/man/man1/anime-terminal.1
 ### Usage
 ```
 Usage:
-    anime-terminal [-q <quality>] [-a <episode>] [-d | -p <download_dir>] [<query>]
-    anime-terminal [-q <quality>] -c
+    anime-terminal [-v] [-q <quality>] [-a <episode>] [-d | -p <download_dir>] [<query>]
+    anime-terminal [-v] [-q <quality>] -c
     anime-terminal -h | -D 
 Options:
     -c continue watching anime from history
@@ -53,6 +52,7 @@ Options:
     -d download episode
     -p download episode to specified directory
     -q set video quality (best|worst|360|480|720|1080)
+    -v use vlc as video player
     -D delete history
 Episode selection:
     Add 'h' on beginning for episodes like '6.5' -> 'h6'
