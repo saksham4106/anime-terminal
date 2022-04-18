@@ -416,7 +416,7 @@ urlfile="${XDG_CACHE_HOME:-$HOME/.cache/anime-terminal}/ani-url"
 logdir="${XDG_CACHE_HOME:-$HOME/.cache/anime-terminal/}"
 
 # create history file and history dir if none found
-[ -d "$logdir" ] || mkdir "$logdir"
+[ -d "$logdir" ] || mkdir -p "$logdir"
 [ -f "$logfile" ] || : > "$logfile"
 
 while getopts 'vq:dp:chDa:' OPT; do
