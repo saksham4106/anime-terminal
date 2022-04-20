@@ -4,18 +4,19 @@ A cli to browse, stream/watch and download anime.
 
 Watch your favorite anime from linux terminal. You don't need a browser to watch anime now.
 
-This tool scrapes the site [gogoanime](https://gogoanime.cm).
+This tool scrapes the site [gogoanime](https://gogoanime.fi/).
 ### Dependencies
 - grep
 - curl
 - sed
 - mpv
 - openssl
-- aria2 (Only for downloading)
-- ffmpeg (Only for downloading)
+
 *Most of the latest anime episodes are available only in m3u8 format which cannot be downloaded by aria2, so using ffmpeg instead. It isn't required for streaming though!'*
 
 ### Optional Dependencies
+- aria2 (Only for downloading; when used with -d/-p options)
+- ffmpeg (Only for downloading; when used with -d/-p options)
 - vlc (only required when used with -v option)
 
 # Installation
