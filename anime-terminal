@@ -67,9 +67,19 @@ search_anime () {
 }	
 
 get_popular_anime () {
+	#TODO: make it not hardcoded... it only works rn because img tags (in gogoanime)
+	# are at an interval of 18 lines
+	#figure some way to do it better'ly
+	
 	curl -s "$base_url/popular" |
 	    sed -n '1,109d; 650~1d;n;n;n;n;n;n;n;n;n;n;n;n;n;n;n;n;n;p;' |
 		sed 's/alt="/[/; s/"/]/3; s/.*\[\([^]]*\)\].*/\1/g'
+
+	# 1,109d; 650~1d     -> removes extra lines
+	# n;n;n;n;n;n;n;n;n;n;n;n;n;n;n;n;n;p;     -> gets every 18th line
+	# s/alt="/[/; s/"/]/3;      -> encapslates alt text with []
+	# s/.*\[\([^]]*\)\].*/\1/g    -> gets the encapsulated text
+	
 
 }
 
