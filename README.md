@@ -22,7 +22,7 @@ This tool scrapes the site [gogoanime](https://gogoanime.fi/).
 # Installation
 **Make sure you've installed all the dependencies on your system.**
 ```
-curl "https://raw.githubusercontent.com/whoisYoges/anime-terminal/master/anime-terminal" > anime-terminal
+curl "https://raw.githubusercontent.com/saksham4106/anime-terminal/master/anime-terminal" > anime-terminal
 chmod +x anime-terminal
 sudo mv anime-terminal /usr/local/bin/
 ```
@@ -52,6 +52,7 @@ Options:
     -h show help text
     -d download episode
     -p download episode to specified directory
+    -P list popular animes
     -q set video quality (best|worst|360|480|720|1080)
     -v use vlc as video player
     -D delete history
